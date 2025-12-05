@@ -14,6 +14,8 @@ void fir(T inp, T coeff[N], T zp1, T zp2, Tacc &out) {
   static Tacc sum = 0;
   static float s_out;
 
+  // std::cout << "====================================\n";
+
   x[0] = inp;
   #pragma hls_unroll yes
   SHIFT: for (int i = N-1; i > 0; i--) {
@@ -23,6 +25,7 @@ void fir(T inp, T coeff[N], T zp1, T zp2, Tacc &out) {
   #pragma hls_unroll yes
   SUM_ACC: for (int i=0; i<N; i++) {
     sum += (x[i] - zp1) * (coeff[i] - zp2);
+    // std::cout << sum << " <-- " << (int)((x[i] - zp1) * (coeff[i] - zp2)) << "\n";
   }
   
   out = sum;
@@ -76,20 +79,21 @@ constexpr T type_min() {
     return (T)(-type_max<T>() - 1);
 }
 
-template<class Tq, int N>
+template<class Tq, int N, int type=0>
 void quantize(
   Tq x_q[N], float x_in[N], float &Sc, Tq &Zp
 ){
-  std::cout << "===================================\n";
+  // std::cout << "===================================\n";
   Tq q_min = type_min<Tq>(), q_max = type_max<Tq>();
   // std::cout << (int)q_min << " || " << (int)q_max << "\n";
   float a = find_min(&x_in[0], N);
   float b = find_max(&x_in[0], N);
+  float r = find_abs_max(x_in, N);
 
   // std::cout << a << ", " << b << "\n";
 
-  float  S = (b - a) / float(q_max - q_min);
-  Tq Z = std::round(-a/S) + q_min;
+  float S = type ? ( (b - a) / float(q_max - q_min) ) : (r / q_max);
+  Tq Z    = type ? std::round(-a/S) + q_min : 0;
   Sc = S;
   Zp = Z;
 

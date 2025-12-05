@@ -30,7 +30,7 @@ int main() {
   print_vector<qtype, 8>("x", xq, "%+d", RED);std::cout << "\n";
 
   float out;
-  for(int i = 0; i < 8; i++) {
+  for(int i = 0; i < 1; i++) {
     // We don't quantize, so set scales/zero points
     // to values such that they don't affect the output
     fir<float, 4>(x[i], coeff, 0, 0, out);
@@ -38,10 +38,12 @@ int main() {
   }
   
   int64_t out_acc;
-  for(int i = 0; i < 8; i++) {
+  for(int i = 0; i < 1; i++) {
     fir<qtype, 4, int64_t>(
       xq[i], cq, Zx, Zcoef, out_acc
     );
+    // printf("Float cast: %f\n", float(out_acc));
+    // printf("scale     : %e\n", Sx * Scoef);
     fir_qres_fp[i] = Sx * Scoef * float(out_acc);
   }
 
